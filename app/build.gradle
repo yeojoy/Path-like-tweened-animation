@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.paran.animation.demo.app"
-        minSdkVersion 7
+        minSdkVersion 15
         targetSdkVersion 23
     }
 

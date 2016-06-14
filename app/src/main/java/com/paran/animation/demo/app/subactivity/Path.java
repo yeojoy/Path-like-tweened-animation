@@ -14,9 +14,11 @@ import java.util.ArrayList;
 import com.paran.animation.demo.app.R;
 import com.paran.animation.demo.app.view.PathButton;
 
+import android.animation.Animator;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.AlphaAnimation;
@@ -28,6 +30,8 @@ import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -41,31 +45,29 @@ import android.widget.Toast;
  * @tags
  */
 public class Path extends Activity implements OnClickListener {
+    private static final String TAG = Path.class.getSimpleName();
+
     private Context context;
 
     /**
      * 메뉴가 열렸을때 이동 거리
      */
-    private static final int length = 220;
+    private static final int length = 350;
     /**
      * (+)버튼 동작 시간
      */
-    private static final int duration = 100;
-    /**
-     * 하위 메뉴 동작 시간
-     */
-    private static final int sub_duration = 200;
+    private static final int duration = 150;
     /**
      * 하위 메뉴 선택시 동작 시간
      */
-    private static final int sub_select_duration = 200;
+    private static final int sub_select_duration = 150;
     /**
      * 하위 메뉴 동작시 각 버튼간의 시간 Gap
      */
     private static final int sub_offset = 30;
 
-    private Button plus_button;
-    private ImageView plus;
+    private ImageButton plus_button;
+//    private ImageView plus;
 
     /**
      * 하위 메뉴 버튼 리스트
@@ -84,7 +86,7 @@ public class Path extends Activity implements OnClickListener {
 
         context = this;
 
-        plus_button = (Button) findViewById(R.id.plus_button);
+        plus_button = (ImageButton) findViewById(R.id.plus_button);
         plus_button.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -99,9 +101,9 @@ public class Path extends Activity implements OnClickListener {
             }
         });
 
-        plus = (ImageView) findViewById(R.id.plus);
+//        plus = (ImageView) findViewById(R.id.plus);
 
-        buttons = new ArrayList<PathButton>();
+        buttons = new ArrayList<>();
 
         PathButton button = (PathButton) findViewById(R.id.camera);
         button.setOnClickListener(this);
@@ -143,60 +145,46 @@ public class Path extends Activity implements OnClickListener {
      * </PRE>
      */
     private void startSubButtonSelectedAnimation(int index) {
-
+        Log.i(TAG, "startSubButtonSelectedAnimation()");
         for (int i = 0; i < buttons.size(); i++) {
+            final PathButton view = buttons.get(i);
             if (index == i) {
-                PathButton view = buttons.get(i);
+                view.animate().scaleX(1.2f).scaleY(1.2f).alpha(0f).setDuration(sub_select_duration)
+                        .setListener(new Animator.AnimatorListener() {
+                            @Override
+                            public void onAnimationStart(Animator animation) { }
 
-                AnimationSet animation = new AnimationSet(false);
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                setTralations(view, 0f, 0f, true);
+                            }
 
-                //실제 버튼이 이동한것이 아니다. 다른 애니메이션을 실행시키기 전에 미리 이동시켜야한다.
-                Animation translate = new TranslateAnimation(
-                        0.0f, view.getXOffset()
-                        , 0.0f, view.getYOffset());
-                translate.setDuration(0);
+                            @Override
+                            public void onAnimationCancel(Animator animation) { }
 
-                Animation scale = new ScaleAnimation(
-                        1.0f, 2.5f
-                        , 1.0f, 2.5f
-                        , Animation.RELATIVE_TO_SELF, 0.5f
-                        , Animation.RELATIVE_TO_SELF, 0.5f);
-                scale.setDuration(sub_select_duration);
+                            @Override
+                            public void onAnimationRepeat(Animator animation) { }
+                        })
+                        .start();
 
-                Animation alpha = new AlphaAnimation(1.0f, 0.0f);
-                alpha.setDuration(sub_select_duration);
-
-                animation.addAnimation(scale);
-                animation.addAnimation(translate);
-                animation.addAnimation(alpha);
-
-                view.startAnimation(animation);
             } else {
-                PathButton view = buttons.get(i);
+                view.animate().alpha(0f).rotation(-360f).translationX(0f).translationY(0f).setDuration(duration)
+                        .setListener(new Animator.AnimatorListener() {
+                            @Override
+                            public void onAnimationStart(Animator animation) { }
 
-                AnimationSet animation = new AnimationSet(false);
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                setTralations(view, 0f, 0f, false);
+                            }
 
-                //실제 버튼이 이동한것이 아니다. 다른 애니메이션을 실행시키기 전에 미리 이동시켜야한다.
-                Animation translate = new TranslateAnimation(
-                        0.0f, view.getXOffset()
-                        , 0.0f, view.getYOffset());
-                translate.setDuration(0);
+                            @Override
+                            public void onAnimationCancel(Animator animation) { }
 
-                Animation scale = new ScaleAnimation(
-                        1.0f, 0.0f
-                        , 1.0f, 0.0f
-                        , Animation.RELATIVE_TO_SELF, 0.5f
-                        , Animation.RELATIVE_TO_SELF, 0.5f);
-                scale.setDuration(sub_select_duration);
-
-                Animation alpha = new AlphaAnimation(1.0f, 0.0f);
-                alpha.setDuration(sub_select_duration);
-
-                animation.addAnimation(scale);
-                animation.addAnimation(translate);
-                animation.addAnimation(alpha);
-
-                view.startAnimation(animation);
+                            @Override
+                            public void onAnimationRepeat(Animator animation) { }
+                        })
+                        .start();
             }
         }
 
@@ -213,11 +201,11 @@ public class Path extends Activity implements OnClickListener {
                     android.R.anim.anticipate_overshoot_interpolator));
             rotate.setFillAfter(true);
             rotate.setDuration(sub_select_duration);
-            plus.startAnimation(rotate);
+            plus_button.startAnimation(rotate);
 
             //2012.1.17 일부단말에서 클릭 안되는 문제 해결을 위해 수정
             for (int i = 0; i < buttons.size(); i++) {
-                movePathButton(i, false);
+//                movePathButton(i, false);
             }
         }
     }
@@ -237,96 +225,82 @@ public class Path extends Activity implements OnClickListener {
      * </PRE>
      */
     private void startSubButtonAnimation(final int index, final boolean open) {
+        Log.i(TAG, "startSubButtonAnimation()");
+        final PathButton view = buttons.get(index);
 
-        PathButton view = buttons.get(index);
-
-        float endX = (float) (length * Math.cos(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
-        float endY = (float) (length * Math.sin(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
-
-        AnimationSet animation = new AnimationSet(false);
-        Animation translate;
-        Animation rotate = new RotateAnimation(
-                0, 360
-                , Animation.RELATIVE_TO_SELF, 0.5f
-                , Animation.RELATIVE_TO_SELF, 0.5f);
-        rotate.setDuration(sub_duration);
-        rotate.setRepeatCount(1);
-        rotate.setInterpolator(AnimationUtils.loadInterpolator(this,
-                android.R.anim.accelerate_interpolator));
+        final int endX = (int) (length * Math.cos(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
+        final int endY = (int) (length * Math.sin(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
+        Log.d(TAG, "********************************************************");
+        Log.d(TAG, "endX : " + endX + ", endY : " + endY);
+        Log.d(TAG, "********************************************************");
 
         if (open) {
-            translate = new TranslateAnimation(
-                    0.0f, endX
-                    , 0.0f, -endY);
-            translate.setDuration(sub_duration);
-            translate.setInterpolator(AnimationUtils.loadInterpolator(this,
-                    android.R.anim.overshoot_interpolator));
-            translate.setStartOffset(sub_offset * index);
+            view.animate().alpha(1f).rotation(360f).translationX(endX).translationY(-endY).setDuration(duration)
+                    .setListener(new Animator.AnimatorListener() {
+                        @Override
+                    public void onAnimationStart(Animator animation) { }
 
-            view.setOffset(endX, -endY);
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            setTralations(view, endX, -endY, false);
+//                            view.setTranslationX(endX);
+//                            view.setTranslationY(-endY);
+                        }
+
+                        @Override
+                    public void onAnimationCancel(Animator animation) { }
+
+                        @Override
+                    public void onAnimationRepeat(Animator animation) { }
+                    })
+                    .start();
         } else {
-            translate = new TranslateAnimation(
-                    0, -endX
-                    , 0, endY);
-            translate.setDuration(sub_duration);
-            translate.setStartOffset(sub_offset * (buttons.size() - (index + 1)));
-            translate.setInterpolator(AnimationUtils.loadInterpolator(this,
-                    android.R.anim.anticipate_interpolator));
+            view.animate().alpha(0f).rotation(-360f).translationX(0f).translationY(0f).setDuration(duration)
+                    .setListener(new Animator.AnimatorListener() {
+                        @Override
+                    public void onAnimationStart(Animator animation) { }
 
-            view.setOffset(-endX, endY);
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            setTralations(view, 0f, 0f, false);
+//                            view.setTranslationX(0f);
+//                            view.setTranslationY(0f);
+                        }
+
+                        @Override
+                    public void onAnimationCancel(Animator animation) { }
+
+                        @Override
+                    public void onAnimationRepeat(Animator animation) { }
+                    })
+                    .start();
         }
-
-        //애니메이션이 끝나고 그자리에 남아있어야 한다.
-        //2012.1.17 일부단말에서 클릭 안되는 문제 해결을 위해 수정
-//		animation.setFillAfter(true);
-
-        //순서가 바뀌면 안된다.
-        animation.addAnimation(rotate);
-        animation.addAnimation(translate);
-
-        //2012.1.17 일부단말에서 클릭 안되는 문제 해결을 위해 수정
-        animation.setAnimationListener(new AnimationListener() {
-
-            @Override
-            public void onAnimationStart(Animation animation) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                // TODO Auto-generated method stub
-                movePathButton(index, open);
-            }
-        });
-        view.startAnimation(animation);
     }
 
     //2012.1.17 일부단말에서 클릭 안되는 문제 해결을 위해 수정
     private int orgLeftMargin = -1;
     private int orgBottomMargin = -1;
 
+    @Deprecated
     private void movePathButton(int index, boolean open) {
+        Log.i(TAG, "movePathButton()");
         PathButton view = buttons.get(index);
 
-        float endX = (float) (length * Math.cos(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
-        float endY = (float) (length * Math.sin(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
+        int endX = (int) (length * Math.cos(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
+        int endY = (int) (length * Math.sin(Math.PI * 1 / 2 * (index) / (buttons.size() - 1)));
+        Log.d(TAG, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+        Log.d(TAG, "endX : " + endX + ", endY : " + endY);
+        Log.d(TAG, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
 
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) view.getLayoutParams();
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
         if (orgLeftMargin == -1) {
             orgLeftMargin = params.leftMargin;
             orgBottomMargin = params.bottomMargin;
         }
 
         if (open) {
-            params.leftMargin = orgLeftMargin + (int) endX;
-            params.bottomMargin = orgBottomMargin + (int) endY;
+            params.leftMargin = orgLeftMargin + endX;
+            params.bottomMargin = orgBottomMargin + endY;
         } else {
             params.leftMargin = orgLeftMargin;
             params.bottomMargin = orgBottomMargin;
@@ -349,6 +323,7 @@ public class Path extends Activity implements OnClickListener {
      * </PRE>
      */
     private void startMenuAnimation(boolean open) {
+        Log.i(TAG, "startMenuAnimation()");
         Animation rotate;
 
         if (open)
@@ -366,7 +341,7 @@ public class Path extends Activity implements OnClickListener {
                 android.R.anim.anticipate_overshoot_interpolator));
         rotate.setFillAfter(true);
         rotate.setDuration(duration);
-        plus.startAnimation(rotate);
+        plus_button.startAnimation(rotate);
 
         for (int i = 0; i < buttons.size(); i++) {
             startSubButtonAnimation(i, open);
@@ -382,34 +357,43 @@ public class Path extends Activity implements OnClickListener {
         switch (v.getId()) {
             case R.id.camera: {
                 Toast.makeText(context, "Camera Clicked", Toast.LENGTH_SHORT).show();
-                startSubButtonSelectedAnimation(0);
             }
             break;
             case R.id.with: {
                 Toast.makeText(context, "With Clicked", Toast.LENGTH_SHORT).show();
-                startSubButtonSelectedAnimation(1);
             }
             break;
             case R.id.place: {
                 Toast.makeText(context, "Place Clicked", Toast.LENGTH_SHORT).show();
-                startSubButtonSelectedAnimation(2);
             }
             break;
             case R.id.music: {
                 Toast.makeText(context, "Music Clicked", Toast.LENGTH_SHORT).show();
-                startSubButtonSelectedAnimation(3);
             }
             break;
             case R.id.thought: {
                 Toast.makeText(context, "Thought Clicked", Toast.LENGTH_SHORT).show();
-                startSubButtonSelectedAnimation(4);
             }
             break;
             case R.id.sleep: {
                 Toast.makeText(context, "Sleep Clicked", Toast.LENGTH_SHORT).show();
-                startSubButtonSelectedAnimation(5);
             }
             break;
+        }
+        int index = buttons.indexOf(v);
+        if (index > -1 && index < buttons.size())
+            startSubButtonSelectedAnimation(index);
+    }
+
+    private void setTralations(View view, float x, float y, boolean needToRestoreScale) {
+        Log.d(TAG, "setTralations()");
+
+        view.setTranslationX(x);
+        view.setTranslationY(y);
+
+        if (needToRestoreScale) {
+            view.setScaleX(1f);
+            view.setScaleY(1f);
         }
     }
 }
